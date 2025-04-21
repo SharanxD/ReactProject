@@ -19,7 +19,7 @@ use Rack::Cors do
 options "*" do
     response.headers["Allow"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = 'Authorization, Content-Type'
+    response.headers["Access-Control-Allow-Headers"] = 'Authorization, Content-Type' # Included Authorizations for the headers
     200
 end
 
@@ -36,7 +36,7 @@ post '/signup' do
   begin
     DB.execute("INSERT INTO users (username, password) VALUES (?, ?)", [username, password])
     { message: "User created successfully" }.to_json
-  rescue SQLite3::ConstraintException
+  rescue SQLite3::ConstraintException               # Results in any sql error which in this case is duplication.
     status 409
     { error: "Username already exists" }.to_json
   end
@@ -63,7 +63,7 @@ post '/login' do
 end
 
 get '/' do
-  { message: "Welcome to the landing page!" }.to_json
+  { message: "Welcome to my API!" }.to_json
 end
 
 
@@ -74,9 +74,9 @@ post '/tasklist' do
   if auth_header && auth_header.start_with?('Bearer ')
     token = auth_header.split(' ').last
     begin
-      decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
+      decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })         #Verifying the User
       username=decoded_token[0]["user_id"]
-      results = DB.execute("SELECT * FROM tasks WHERE username= ?",[username])
+      results = DB.execute("SELECT * FROM tasks WHERE username= ?",[username])            # Getting all the tasks corelating to the username
       results.to_json
     rescue JWT::ExpiredSignature => e
       status 409
@@ -94,7 +94,7 @@ post '/tasks' do
   username=data["username"]
   token=data["tokenid"]
   begin
-    decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
+    decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })          # Verifying the User
     
     jwtuser=decoded_token[0]["user_id"]
     if username==jwtuser
@@ -104,8 +104,8 @@ post '/tasks' do
       
       dbquery=DB.execute("INSERT INTO tasks(username,title,desc,createtime,endtime) values(?,?,?,datetime('now','localtime'),?)",[username,title,desc,endtime])
       if dbquery
-        {message: "Task added successfully"}.to_json
-      else
+        {message: "Task added successfully"}.to_json        # Adding a new task to the database
+      else 
         {message: "Error in creating task"}.to_json
       end
       
@@ -129,10 +129,10 @@ post '/noteslist' do
   if auth_header && auth_header.start_with?('Bearer ')
     token = auth_header.split(' ').last
     begin
-      decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
+      decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })        # Verifying the User
       jwtuser=decoded_token[0]["user_id"]
-      results = DB.execute("SELECT * FROM notes WHERE username= ?",[jwtuser])
-      results.to_json
+      results = DB.execute("SELECT * FROM notes WHERE username= ?",[jwtuser])               # Getting all the notes co-relating to the User
+      results.to_json 
     rescue JWT::ExpiredSignature => e
       status 409
       {message: "JWT Expired Please login again."}.to_json
@@ -149,13 +149,13 @@ post '/notes' do
   username=data["username"]
   token=data["tokenid"]
   begin
-    decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
+    decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })     # Verifying the User
     jwtuser=decoded_token[0]["user_id"]
     if username==jwtuser
       notedata=data["notedata"]
       dbquery=DB.execute("INSERT INTO notes(username,notedata,createtime) values(?,?,datetime('now','localtime'))",[username,notedata])
       if dbquery
-        {message: "Notes added successfully"}.to_json
+        {message: "Notes added successfully"}.to_json        # Adding a new Note to the server.
       else
         {message: "Error in adding notes"}.to_json
       end
