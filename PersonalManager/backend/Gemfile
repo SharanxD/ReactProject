@@ -1,0 +1,19 @@
+# Gemfile
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sqlite3'
+gem 'bcrypt'
+gem 'sinatra-contrib', '2.1.0'
+gem 'rack-cors'
+gem 'jwt'
+
+
+require 'json'
+
+
+group :test do
+    gem 'rspec'
+    gem 'rack-test'
+end
+
